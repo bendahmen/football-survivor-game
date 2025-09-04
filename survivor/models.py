@@ -68,4 +68,29 @@ class PlayerEntry(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     pool = models.ForeignKey(GamePool, on_delete=models.CASCADE)
     eliminated = models.BooleanField(default=False)
-    elimination_date = models.DateField(null=True, blank=True)
+    eliminated_matchday = models.ForeignKey(Matchday, null=True, blank=True, 
+                                            on_delete=models.SET_NULL, 
+                                            related_name='eliminations')
+
+class Pick(models.Model):
+    player_entry = models.ForeignKey(PlayerEntry, on_delete=models.CASCADE)
+    matchday = models.ForeignKey(Matchday, on_delete=models.CASCADE)
+    team = models.ForeignKey(Team, on_delete=models.CASCADE)
+    pick_submitted = models.DateField()
+
+    def clean(self):
+        # Check if teams has already been picked twice
+        pick_count = Pick.objects.filter(
+            player_entry=self.player_entry,
+            team=self.team
+        ).exclude(pk=self.pk).count()
+
+        if pick_count >= 2:
+            raise ValidationError(f"You've already picked {self.team} twice!")
+        
+        # Check if pick deadline has passed
+        pick_deadline = Matchday.objects.filter(pk=self.matchday).start_date
+        if timezone.now() >= pick_deadline:
+            raise ValidationError(f"The deadline for this matchday has passed!")
+        
+        
