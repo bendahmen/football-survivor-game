@@ -74,7 +74,7 @@ def pool_detail(request, pool_id):
         for team in Team.objects.all().order_by('name'):
             teams.append({
                 'team': team,
-                'picked_count': picked_teams.get(team.id, 0),
+                'pick_count': picked_teams.get(team.id, 0),
                 'available': picked_teams.get(team.id, 0) < 2
             })
 
