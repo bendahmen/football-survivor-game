@@ -184,7 +184,7 @@ class Pick(models.Model):
             raise ValidationError("Pick deadline has passed for this matchday!")
         
         # Check if player is eliminated
-        if self.player_entry and self.player_entry.eliminated:
+        if self.player_entry and self.player_entry.is_eliminated:
             raise ValidationError("You are eliminated!")
         
     def save(self, *args, **kwargs):
