@@ -86,6 +86,7 @@ class GamePool(models.Model):
     name = models.CharField(max_length=100)
     season = models.ForeignKey(Season, on_delete=models.CASCADE)
     start_date = models.DateField()
+    is_active = models.BooleanField(default=True)
 
 class PlayerEntry(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
