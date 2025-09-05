@@ -162,7 +162,7 @@ class Pick(models.Model):
 
     class Meta:
         unique_together = ['player_entry', 'matchday']
-        ordering = ['matchday_number']
+        ordering = ['matchday__number']
 
     def __str__(self):
         return f"{self.player_entry.user.username} picked {self.team.short_name} for Matchday {self.matchday.number}"
