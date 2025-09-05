@@ -1,0 +1,16 @@
+<!-- templates/signup.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Create Account</h2>
+<form method="post" style="background: white; padding: 2rem; border-radius: 8px; max-width: 400px;">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" style="padding: 0.5rem 1rem; background: #2e7d32; color: white; border: none; border-radius: 4px; cursor: pointer;">
+        Sign Up
+    </button>
+</form>
+<p style="margin-top: 1rem;">
+    Already have an account? <a href="{% url 'login' %}">Login here</a>
+</p>
+{% endblock %}
