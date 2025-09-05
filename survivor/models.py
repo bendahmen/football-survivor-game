@@ -42,12 +42,25 @@ class Matchday(models.Model):
         unique_together = ['season', 'number']
         ordering = ['number']
 
+    def __str__(self):
+        return f"Matchday {self.number} - {self.season.year}"
+    
+    @property
+    def has_started(self):
+        """Check if the matchday has started (past the deadline)"""
+        return timezone.now() >= self.start_date
+    
+    @property
+    def is_current(self):
+        """Check if we're currently in this matchday period"""
+        now = timezone.now()
+        return self.start_date <= now <= self.end_date
+
 class Match(models.Model):
     RESULT_CHOICES = [
         ('HOME', 'Home Win'),
         ('AWAY', 'Away Win'),
-        ('DRAW', 'Draw'),
-        (None, 'Not Played')
+        ('DRAW', 'Draw')
     ]
 
     matchday = models.ForeignKey(Matchday, on_delete=models.CASCADE,
@@ -61,6 +74,7 @@ class Match(models.Model):
     is_processed = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
+        # Auto-calculate result from scores
         if self.home_score is not None and self.away_score is not None:
             if self.home_score > self.away_score:
                 self.result = 'HOME'
@@ -71,57 +85,110 @@ class Match(models.Model):
         super().save(*args, **kwargs)
 
     def did_not_lose(self, team):
+        """Check if the given team did not lose this match"""
         if self.result is None:
-            return False
-        if team == self.home_team and self.result in ['HOME', 'DRAW']:
-            return True
-        if team == self.away_team and self.result in ['AWAY', 'DRAW']:
-            return True
-        return False
+            return None  # Match not played yet
+        
+        if team == self.home_team:
+            return self.result in ['HOME', 'DRAW']
+        elif team == self.away_team:
+            return self.result in ['AWAY', 'DRAW']
+        else:
+            return None  # Team not in this match
     
     def __str__(self):
-        return f"{self.home_team} vs {self.away_team} on {self.kickoff.strftime('%Y-%m-%d')}"
+        return f"{self.home_team.short_name} vs {self.away_team.short_name} on {self.kickoff.strftime('%Y-%m-%d')}"
 
 class GamePool(models.Model):
     name = models.CharField(max_length=100)
-    season = models.ForeignKey(Season, on_delete=models.CASCADE)
-    start_date = models.DateField()
+    season = models.ForeignKey(Season, on_delete=models.CASCADE, related_name='pools')
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_pools')
+    created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.season.year})"
+    
+    @property
+    def active_players_count(self):
+        return self.entries.filter(is_eliminated=False).count()
+    
+    @property
+    def total_players_count(self):
+        return self.entries.count()
 
 class PlayerEntry(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    pool = models.ForeignKey(GamePool, on_delete=models.CASCADE)
+    pool = models.ForeignKey(GamePool, on_delete=models.CASCADE, related_name='entries')
     is_eliminated = models.BooleanField(default=False)
     eliminated_matchday = models.ForeignKey(Matchday, null=True, blank=True, 
                                             on_delete=models.SET_NULL, 
                                             related_name='eliminations')
+    joined_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['user', 'pool']
+        ordering = ['is_eliminated', '-eliminated_matchday__number', 'user__username']
+
+    def __str__(self):
+        status = "Eliminated" if self.is_eliminated else "Active"
+        return f"{self.user.username} - {self.pool.name} ({status})"
+    
+    def get_pick_count_for_team(self, team):
+        """Get how many times the player has picked a specific team"""
+        return (self.picks.filter(team=team).count())
+    
+    def can_pick_team(self, team):
+        """Check if the player can pick the given team (not picked twice already)"""
+        return self.get_pick_count_for_team(team) < 2
+    
+    def get_available_teams(self, matchday=None):
+        """Get list of teams that can still be picked by this player"""
+        teams = Team.objects.all()
+        available = []
+        for team in teams:
+            if self.can_pick_team(team):
+                available.append(team)
+        return available
 
 class Pick(models.Model):
     player_entry = models.ForeignKey(PlayerEntry, on_delete=models.CASCADE,
                                      related_name='picks')
-    matchday = models.ForeignKey(Matchday, on_delete=models.CASCADE)
+    matchday = models.ForeignKey(Matchday, on_delete=models.CASCADE, related_name='picks')
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
     is_successful = models.BooleanField(null=True, blank=True)
 
-    def clean(self):
-        # Check if teams has already been picked twice
-        pick_count = Pick.objects.filter(
-            player_entry=self.player_entry,
-            team=self.team
-        ).exclude(pk=self.pk).count()
+    class Meta:
+        unique_together = ['player_entry', 'matchday']
+        ordering = ['matchday_number']
 
-        if pick_count >= 2:
-            raise ValidationError(f"You've already picked {self.team} twice!")
+    def __str__(self):
+        return f"{self.player_entry.user.username} picked {self.team.short_name} for Matchday {self.matchday.number}"
+
+    def clean(self):
+        """Validate the pick before saving"""
+        # Check if teams has already been picked twice
+        if self.player_entry and self.team:
+            pick_count = Pick.objects.filter(
+                player_entry=self.player_entry,
+                team=self.team
+            ).exclude(pk=self.pk).count()
+
+            if pick_count >= 2:
+                raise ValidationError(f"You've already picked {self.team} twice!")
         
         # Check if pick deadline has passed
-        pick_deadline = self.matchday.start_date
-        if timezone.now() >= pick_deadline:
-            raise ValidationError(f"The deadline for this matchday has passed!")
+        if self.matchday and self.matchday.has_started:
+            raise ValidationError("Pick deadline has passed for this matchday!")
         
         # Check if player is eliminated
-        if self.player_entry.eliminated:
+        if self.player_entry and self.player_entry.eliminated:
             raise ValidationError("You are eliminated!")
         
+    def save(self, *args, **kwargs):
+        # Run validation before saving
+        self.full_clean()
+        super().save(*args, **kwargs)
 
