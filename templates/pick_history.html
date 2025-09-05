@@ -1,0 +1,400 @@
+{% extends 'base.html' %}
+
+{% block title %}Your Pick History - {{ pool.name }} - Bundesliga Survivor{% endblock %}
+
+{% block extra_css %}
+<style>
+    .history-header {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .history-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .history-title h2 {
+        color: #333;
+        margin: 0;
+    }
+    
+    .player-status {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 500;
+    }
+    
+    .status-active {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .status-eliminated {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    
+    .stat-card {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        text-align: center;
+    }
+    
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+    
+    .stat-label {
+        font-size: 0.85rem;
+        color: #666;
+        margin-top: 0.25rem;
+    }
+    
+    .picks-timeline {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .picks-timeline h3 {
+        color: #333;
+        margin-bottom: 1.5rem;
+    }
+    
+    .pick-card {
+        display: grid;
+        grid-template-columns: 60px 1fr auto;
+        gap: 1rem;
+        align-items: center;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        transition: all 0.3s;
+    }
+    
+    .pick-card:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    
+    .pick-card.successful {
+        border-left: 4px solid #28a745;
+    }
+    
+    .pick-card.failed {
+        border-left: 4px solid #dc3545;
+    }
+    
+    .pick-card.pending {
+        border-left: 4px solid #ffc107;
+    }
+    
+    .matchday-number {
+        text-align: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+    
+    .matchday-label {
+        font-size: 0.7rem;
+        color: #999;
+        text-transform: uppercase;
+        margin-top: 0.25rem;
+    }
+    
+    .pick-details {
+        flex: 1;
+    }
+    
+    .team-picked {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .team-badge {
+        display: inline-block;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 30px;
+        color: white;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+    
+    .match-info {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .pick-date {
+        color: #999;
+        font-size: 0.85rem;
+    }
+    
+    .pick-result {
+        text-align: center;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 500;
+    }
+    
+    .result-survived {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .result-eliminated {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .result-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .team-usage {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .team-usage h3 {
+        color: #333;
+        margin-bottom: 1.5rem;
+    }
+    
+    .team-usage-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 0.75rem;
+    }
+    
+    .team-usage-card {
+        padding: 0.75rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        text-align: center;
+        transition: all 0.3s;
+    }
+    
+    .team-usage-card.used-once {
+        background: #fff3cd;
+        border-color: #ffc107;
+    }
+    
+    .team-usage-card.used-twice {
+        background: #f8d7da;
+        border-color: #dc3545;
+    }
+    
+    .team-usage-card.available {
+        background: #d4edda;
+        border-color: #28a745;
+    }
+    
+    .team-usage-name {
+        font-weight: 500;
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .team-usage-count {
+        font-size: 0.75rem;
+        color: #666;
+    }
+    
+    .no-picks {
+        text-align: center;
+        padding: 3rem;
+        color: #999;
+    }
+    
+    .back-button {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: #6c757d;
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+    
+    .back-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="history-header">
+    <div class="history-title">
+        <h2>Your Pick History</h2>
+        <a href="{% url 'survivor:pool_detail' pool.id %}" class="back-button">
+            ← Back to Pool
+        </a>
+    </div>
+    
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <strong>{{ pool.name }}</strong> • Season {{ pool.season.year }}
+        </div>
+        <span class="player-status {% if player_entry.is_eliminated %}status-eliminated{% else %}status-active{% endif %}">
+            {% if player_entry.is_eliminated %}
+                Eliminated - Matchday {{ player_entry.eliminated_matchday.number }}
+            {% else %}
+                Active Player
+            {% endif %}
+        </span>
+    </div>
+    
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.total_picks }}</div>
+            <div class="stat-label">Total Picks</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">
+                {{ stats.weeks_survived }}{% if not player_entry.is_eliminated %}+{% endif %}
+            </div>
+            <div class="stat-label">Weeks Survived</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.successful_picks }}</div>
+            <div class="stat-label">Successful Picks</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.unique_teams }}</div>
+            <div class="stat-label">Different Teams</div>
+        </div>
+    </div>
+</div>
+
+{% if picks_with_matches %}
+<div class="picks-timeline">
+    <h3>📊 Your Picks Timeline</h3>
+    
+    {% for item in picks_with_matches %}
+    <div class="pick-card {% if item.pick.is_successful == True %}successful{% elif item.pick.is_successful == False %}failed{% else %}pending{% endif %}">
+        <div class="matchday-info">
+            <div class="matchday-number">{{ item.pick.matchday.number }}</div>
+            <div class="matchday-label">Matchday</div>
+        </div>
+        
+        <div class="pick-details">
+            <div class="team-picked">
+                <span class="team-badge" style="background: {{ item.pick.team.color_primary }};">
+                    {{ item.pick.team.short_name }}
+                </span>
+                {{ item.pick.team.name }}
+            </div>
+            
+            {% if item.match %}
+            <div class="match-info">
+                {% if item.was_home %}
+                    vs {{ item.opponent.name }} (H)
+                {% else %}
+                    @ {{ item.opponent.name }} (A)
+                {% endif %}
+                
+                {% if item.match.result %}
+                    • Score: {{ item.match.home_score }}-{{ item.match.away_score }}
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            <div class="pick-date">
+                Picked on {{ item.pick.created_at|date:"M d, Y H:i" }}
+            </div>
+        </div>
+        
+        <div class="pick-result">
+            {% if item.pick.is_successful == True %}
+                <div class="result-survived">
+                    ✅ Survived
+                </div>
+            {% elif item.pick.is_successful == False %}
+                <div class="result-eliminated">
+                    ❌ Eliminated
+                </div>
+            {% else %}
+                <div class="result-pending">
+                    ⏳ Pending
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="picks-timeline">
+    <div class="no-picks">
+        <h3>No picks yet</h3>
+        <p>You haven't made any picks in this pool.</p>
+        <a href="{% url 'survivor:pool_detail' pool.id %}" class="btn" style="margin-top: 1rem;">
+            Make Your First Pick
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<div class="team-usage">
+    <h3>🏆 Team Usage Summary</h3>
+    <p style="color: #666; margin-bottom: 1rem;">You can use each team a maximum of 2 times</p>
+    
+    <div class="team-usage-grid">
+        {% for item in team_usage %}
+        <div class="team-usage-card {{ item.status }}">
+            <div class="team-usage-name">{{ item.team.short_name }}</div>
+            <div class="team-usage-count">
+                {% if item.pick_count == 0 %}
+                    Available
+                {% elif item.pick_count == 1 %}
+                    Used Once
+                {% else %}
+                    Used Twice
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add any interactive features here if needed
+    console.log('Pick history loaded');
+</script>
+{% endblock %}

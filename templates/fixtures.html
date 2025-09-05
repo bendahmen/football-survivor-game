@@ -1,0 +1,544 @@
+{% extends 'base.html' %}
+
+{% block title %}Fixtures & Results - {{ season.year }} - Bundesliga Survivor{% endblock %}
+
+{% block extra_css %}
+<style>
+    .fixtures-header {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .fixtures-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .fixtures-title h2 {
+        color: #333;
+        margin: 0;
+    }
+    
+    .matchday-tabs {
+        background: white;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        display: flex;
+        gap: 0.5rem;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+    
+    .matchday-tab {
+        padding: 0.5rem 1rem;
+        background: #f8f9fa;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        text-decoration: none;
+        color: #666;
+        font-weight: 500;
+        transition: all 0.3s;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+    
+    .matchday-tab:hover {
+        background: #e9ecef;
+        color: #333;
+    }
+    
+    .matchday-tab.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-color: #667eea;
+    }
+    
+    .matchday-tab.current {
+        border: 2px solid #28a745;
+    }
+    
+    .matchday-tab.completed {
+        background: #e9ecef;
+    }
+    
+    .matchday-section {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .matchday-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 1rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 2px solid #f0f0f0;
+    }
+    
+    .matchday-header h3 {
+        color: #333;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .matchday-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    
+    .badge-current {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .badge-completed {
+        background: #cce5ff;
+        color: #004085;
+    }
+    
+    .badge-upcoming {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .matches-grid {
+        display: grid;
+        gap: 1rem;
+    }
+    
+    .match-card {
+        display: grid;
+        grid-template-columns: 100px 1fr 120px;
+        align-items: center;
+        padding: 1rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+    
+    .match-card:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transform: translateY(-1px);
+    }
+    
+    .match-datetime {
+        text-align: center;
+        padding-right: 1rem;
+        border-right: 1px solid #e0e0e0;
+    }
+    
+    .match-date {
+        font-size: 0.75rem;
+        color: #999;
+        text-transform: uppercase;
+    }
+    
+    .match-time {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .match-teams {
+        padding: 0 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+    }
+    
+    .team-container {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .team-container.home {
+        justify-content: flex-end;
+    }
+    
+    .team-container.away {
+        justify-content: flex-start;
+    }
+    
+    .team-logo {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.7rem;
+        color: white;
+    }
+    
+    .team-name {
+        font-weight: 500;
+    }
+    
+    .team-name.winner {
+        font-weight: bold;
+        color: #28a745;
+    }
+    
+    .team-name.loser {
+        color: #6c757d;
+    }
+    
+    .match-vs {
+        padding: 0.25rem 0.75rem;
+        background: #f0f0f0;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        color: #666;
+        font-weight: bold;
+        white-space: nowrap;
+    }
+    
+    .match-result {
+        text-align: center;
+        padding-left: 1rem;
+        border-left: 1px solid #e0e0e0;
+    }
+    
+    .match-score {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .match-status {
+        font-size: 0.75rem;
+        color: #666;
+        text-transform: uppercase;
+        margin-top: 0.25rem;
+    }
+    
+    .match-picks {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+        margin-top: 0.5rem;
+    }
+    
+    .pick-count {
+        padding: 0.2rem 0.5rem;
+        background: #f8f9fa;
+        border-radius: 12px;
+        font-size: 0.75rem;
+    }
+    
+    .no-matches {
+        text-align: center;
+        padding: 2rem;
+        color: #999;
+    }
+    
+    .legend {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin-top: 1rem;
+        font-size: 0.85rem;
+    }
+    
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .legend-color {
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+    }
+    
+    @media (max-width: 768px) {
+        .match-card {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .match-datetime {
+            border-right: none;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 0.5rem;
+            padding-right: 0;
+        }
+        
+        .match-result {
+            border-left: none;
+            border-top: 1px solid #e0e0e0;
+            padding-top: 0.5rem;
+            padding-left: 0;
+        }
+        
+        .team-container {
+            justify-content: center !important;
+        }
+        
+        .match-teams {
+            padding: 0;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="fixtures-header">
+    <div class="fixtures-title">
+        <h2>Fixtures & Results</h2>
+        {% if pool %}
+        <a href="{% url 'survivor:pool_detail' pool.id %}" class="btn btn-secondary">
+            ← Back to {{ pool.name }}
+        </a>
+        {% else %}
+        <span class="season-badge">Season {{ season.year }}</span>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Matchday Quick Navigation -->
+<div class="matchday-tabs">
+    {% for md in all_matchdays %}
+    <a href="#matchday-{{ md.number }}" 
+       class="matchday-tab {% if md == current_matchday %}current{% elif md.is_complete %}completed{% endif %}"
+       data-matchday="{{ md.number }}">
+        MD {{ md.number }}
+    </a>
+    {% endfor %}
+</div>
+
+<!-- Current Matchday (if exists) -->
+{% if current_matchday %}
+<div class="matchday-section" id="matchday-{{ current_matchday.number }}">
+    <div class="matchday-header">
+        <h3>
+            ⚽ Matchday {{ current_matchday.number }}
+            <span class="matchday-badge badge-current">CURRENT</span>
+        </h3>
+        <span style="color: #666;">
+            {{ current_matchday.start_date|date:"M d" }} - {{ current_matchday.end_date|date:"M d, Y" }}
+        </span>
+    </div>
+    
+    <div class="matches-grid">
+        {% for match in current_matchday.matches.all %}
+        <div class="match-card">
+            <div class="match-datetime">
+                <div class="match-date">{{ match.kickoff|date:"D, M d" }}</div>
+                <div class="match-time">{{ match.kickoff|date:"H:i" }}</div>
+            </div>
+            
+            <div class="match-teams">
+                <div class="team-container home">
+                    <span class="team-name {% if match.result == 'HOME' %}winner{% elif match.result == 'AWAY' %}loser{% endif %}">
+                        {{ match.home_team.name }}
+                    </span>
+                    <div class="team-logo" style="background: {{ match.home_team.color_primary }};">
+                        {{ match.home_team.short_name|slice:":2" }}
+                    </div>
+                </div>
+                
+                {% if match.result %}
+                <span class="match-vs" style="background: {% if match.result == 'DRAW' %}#ffc107{% else %}#f0f0f0{% endif %};">
+                    {{ match.home_score }} - {{ match.away_score }}
+                </span>
+                {% else %}
+                <span class="match-vs">vs</span>
+                {% endif %}
+                
+                <div class="team-container away">
+                    <div class="team-logo" style="background: {{ match.away_team.color_primary }};">
+                        {{ match.away_team.short_name|slice:":2" }}
+                    </div>
+                    <span class="team-name {% if match.result == 'AWAY' %}winner{% elif match.result == 'HOME' %}loser{% endif %}">
+                        {{ match.away_team.name }}
+                    </span>
+                </div>
+            </div>
+            
+            <div class="match-result">
+                {% if match.result %}
+                    <div class="match-status" style="color: #28a745;">FINAL</div>
+                    {% if match.result == 'HOME' %}
+                        <small>{{ match.home_team.short_name }} WIN</small>
+                    {% elif match.result == 'AWAY' %}
+                        <small>{{ match.away_team.short_name }} WIN</small>
+                    {% else %}
+                        <small>DRAW</small>
+                    {% endif %}
+                {% else %}
+                    <div class="match-status">UPCOMING</div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Future Matchdays -->
+{% if future_matchdays %}
+<h3 style="color: white; margin: 2rem 0 1rem;">Upcoming Matchdays</h3>
+{% for matchday in future_matchdays|slice:":3" %}
+<div class="matchday-section" id="matchday-{{ matchday.number }}">
+    <div class="matchday-header">
+        <h3>
+            📅 Matchday {{ matchday.number }}
+            <span class="matchday-badge badge-upcoming">UPCOMING</span>
+        </h3>
+        <span style="color: #666;">
+            {{ matchday.start_date|date:"M d" }} - {{ matchday.end_date|date:"M d, Y" }}
+        </span>
+    </div>
+    
+    <div class="matches-grid">
+        {% for match in matchday.matches.all %}
+        <div class="match-card">
+            <div class="match-datetime">
+                <div class="match-date">{{ match.kickoff|date:"D, M d" }}</div>
+                <div class="match-time">{{ match.kickoff|date:"H:i" }}</div>
+            </div>
+            
+            <div class="match-teams">
+                <div class="team-container home">
+                    <span class="team-name">{{ match.home_team.name }}</span>
+                    <div class="team-logo" style="background: {{ match.home_team.color_primary }};">
+                        {{ match.home_team.short_name|slice:":2" }}
+                    </div>
+                </div>
+                
+                <span class="match-vs">vs</span>
+                
+                <div class="team-container away">
+                    <div class="team-logo" style="background: {{ match.away_team.color_primary }};">
+                        {{ match.away_team.short_name|slice:":2" }}
+                    </div>
+                    <span class="team-name">{{ match.away_team.name }}</span>
+                </div>
+            </div>
+            
+            <div class="match-result">
+                <div class="match-status">{{ match.kickoff|timeuntil }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endfor %}
+{% endif %}
+
+<!-- Past Matchdays -->
+{% if past_matchdays %}
+<h3 style="color: white; margin: 2rem 0 1rem;">Completed Matchdays</h3>
+{% for matchday in past_matchdays|slice:"-3:" %}
+<div class="matchday-section" id="matchday-{{ matchday.number }}">
+    <div class="matchday-header">
+        <h3>
+            ✅ Matchday {{ matchday.number }}
+            <span class="matchday-badge badge-completed">COMPLETED</span>
+        </h3>
+        <span style="color: #666;">
+            {{ matchday.start_date|date:"M d" }} - {{ matchday.end_date|date:"M d, Y" }}
+        </span>
+    </div>
+    
+    <div class="matches-grid">
+        {% for match in matchday.matches.all %}
+        <div class="match-card">
+            <div class="match-datetime">
+                <div class="match-date">{{ match.kickoff|date:"D, M d" }}</div>
+                <div class="match-time">FINAL</div>
+            </div>
+            
+            <div class="match-teams">
+                <div class="team-container home">
+                    <span class="team-name {% if match.result == 'HOME' %}winner{% elif match.result == 'AWAY' %}loser{% endif %}">
+                        {{ match.home_team.name }}
+                    </span>
+                    <div class="team-logo" style="background: {{ match.home_team.color_primary }};">
+                        {{ match.home_team.short_name|slice:":2" }}
+                    </div>
+                </div>
+                
+                <span class="match-vs" style="background: {% if match.result == 'DRAW' %}#ffc107{% else %}#f0f0f0{% endif %};">
+                    {{ match.home_score }} - {{ match.away_score }}
+                </span>
+                
+                <div class="team-container away">
+                    <div class="team-logo" style="background: {{ match.away_team.color_primary }};">
+                        {{ match.away_team.short_name|slice:":2" }}
+                    </div>
+                    <span class="team-name {% if match.result == 'AWAY' %}winner{% elif match.result == 'HOME' %}loser{% endif %}">
+                        {{ match.away_team.name }}
+                    </span>
+                </div>
+            </div>
+            
+            <div class="match-result">
+                {% if match.result == 'HOME' %}
+                    <small style="color: #28a745;">{{ match.home_team.short_name }} WIN</small>
+                {% elif match.result == 'AWAY' %}
+                    <small style="color: #28a745;">{{ match.away_team.short_name }} WIN</small>
+                {% else %}
+                    <small style="color: #ffc107;">DRAW</small>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endfor %}
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Smooth scroll to matchday section when tab clicked
+    document.querySelectorAll('.matchday-tab').forEach(tab => {
+        tab.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.matchday-tab').forEach(t => t.classList.remove('active'));
+            // Add active class to clicked tab
+            this.classList.add('active');
+            
+            // Scroll to section
+            const targetId = this.getAttribute('href').substring(1);
+            const targetElement = document.getElementById(targetId);
+            
+            if (targetElement) {
+                targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    });
+    
+    // Highlight current matchday tab on page load
+    const currentMatchday = document.querySelector('.matchday-tab.current');
+    if (currentMatchday) {
+        currentMatchday.classList.add('active');
+    }
+</script>
+{% endblock %}

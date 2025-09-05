@@ -35,7 +35,7 @@ class Matchday(models.Model):
                                related_name ='matchdays')
     number = models.PositiveIntegerField()
     start_date = models.DateTimeField()
-    end_date = models.DateField()
+    end_date = models.DateTimeField()
     is_complete = models.BooleanField(default=False)
 
     class Meta:

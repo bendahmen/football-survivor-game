@@ -294,10 +294,37 @@ def pick_history(request, pool_id):
             'was_home': match.home_team == pick.team if match else None
         })
     
+    # Calculate team usage for all teams
+    team_usage = []
+    all_teams = Team.objects.all().order_by('name')
+    
+    for team in all_teams:
+        pick_count = player_entry.get_pick_count_for_team(team)
+        team_usage.append({
+            'team': team,
+            'pick_count': pick_count,
+            'status': 'used-twice' if pick_count == 2 else 'used-once' if pick_count == 1 else 'available'
+        })
+    
+    # Calculate statistics
+    successful_picks = picks.filter(is_successful=True).count()
+    failed_picks = picks.filter(is_successful=False).count()
+    pending_picks = picks.filter(is_successful__isnull=True).count()
+    unique_teams = picks.values('team').distinct().count()
+    
     context = {
         'pool': pool,
         'player_entry': player_entry,
-        'picks_with_matches': picks_with_matches
+        'picks_with_matches': picks_with_matches,
+        'team_usage': team_usage,
+        'stats': {
+            'total_picks': picks.count(),
+            'successful_picks': successful_picks,
+            'failed_picks': failed_picks,
+            'pending_picks': pending_picks,
+            'unique_teams': unique_teams,
+            'weeks_survived': picks.count() - 1 if player_entry.is_eliminated else picks.count()
+        }
     }
     
     return render(request, 'pick_history.html', context)
