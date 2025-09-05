@@ -89,8 +89,8 @@ class Pick(models.Model):
             raise ValidationError(f"You've already picked {self.team} twice!")
         
         # Check if pick deadline has passed
-        pick_deadline = Matchday.objects.filter(pk=self.matchday).start_date
+        pick_deadline = self.matchday.start_date
         if timezone.now() >= pick_deadline:
             raise ValidationError(f"The deadline for this matchday has passed!")
         
-        
+

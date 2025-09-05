@@ -21,5 +21,9 @@ from survivor import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.home, name='home')
+    path('', views.home, name='home'),
+    path('pool/<int:pool_id>/', views.pool_detail, name='pool_detail'),
+    path('pool/<int:pool_id>/pick/', views.make_pick, name='make_pick'),
+    path('pool/<int:pool_id>/join/', views.join_pool, name='join_pool'),
+    path('int:matchday_id>/', views.matchday_results, name='matchday_results')
 ]
