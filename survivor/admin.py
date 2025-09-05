@@ -4,7 +4,7 @@ from .models import Team, Season, Matchday, Match, GamePool, PlayerEntry, Pick
 # Register your models here.
 @admin.register(Team)
 class TeamAdmin(admin.ModelAdmin):
-    list_display = ('name', 'short_name', 'code')
+    list_display = ('name', 'short_name')
     search_fields = ('name', 'short_name')
 
 @admin.register(Season)
