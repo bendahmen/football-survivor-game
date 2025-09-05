@@ -26,13 +26,13 @@ class MatchAdmin(admin.ModelAdmin):
 
 @admin.register(GamePool)
 class GamePoolAdmin(admin.ModelAdmin):
-    list_display = ['name', 'season', 'created_by', 'is_active', 'entry_fee']
-    list_filter = ['season', 'is_active']
+    list_display = ['name', 'season']
+    list_filter = ['season']
 
 @admin.register(PlayerEntry)
 class PlayerEntryAdmin(admin.ModelAdmin):
-    list_display = ['user', 'game_pool', 'is_eliminated', 'eliminated_matchday']
-    list_filter = ['game_pool', 'is_eliminated']
+    list_display = ['user', 'pool', 'is_eliminated', 'eliminated_matchday']
+    list_filter = ['pool', 'is_eliminated']
     search_fields = ['user__username']
 
 @admin.register(Pick)
