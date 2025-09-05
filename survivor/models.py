@@ -4,9 +4,13 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 class Team(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
     short_name = models.CharField(max_length=3)
-    code = models.CharField(max_length=10, unique=True)
+    color_primary = models.CharField(max_length=7, default='#FFFFFF') # Hex color
+    color_secondary = models.CharField(max_length=7, default='#000000') # Hex color
+
+    class Meta:
+        ordering = ['name']
 
     def __str__(self):
         return self.name
@@ -14,6 +18,8 @@ class Team(models.Model):
 class Season(models.Model):
     year = models.CharField(max_length=7, unique=True) # e.g. "2024-25"
     is_active = models.BooleanField(default=False)
+    start_date = models.DateField()
+    end_date = models.DateField()
 
     # Ensure only one active season at a time
     def save(self, *args, **kwargs):
@@ -21,8 +27,12 @@ class Season(models.Model):
             Season.objects.filter(is_active=True).exclude(pk=self.pk).update(is_active=False)
         super().save(*args, **kwargs)
 
+    def __str__(self):
+        return f"Season {self.year}"
+
 class Matchday(models.Model):
-    season = models.ForeignKey(Season, on_delete=models.CASCADE)
+    season = models.ForeignKey(Season, on_delete=models.CASCADE,
+                               related_name ='matchdays')
     number = models.PositiveIntegerField()
     start_date = models.DateField()
     end_date = models.DateField()
@@ -40,12 +50,25 @@ class Match(models.Model):
         (None, 'Not Played')
     ]
 
-    matchday = models.ForeignKey(Matchday, on_delete=models.CASCADE)
+    matchday = models.ForeignKey(Matchday, on_delete=models.CASCADE,
+                                 related_name='matches')
     home_team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='home_matches')
     away_team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='away_matches')
     kickoff = models.DateTimeField()
     result = models.CharField(max_length=4, choices=RESULT_CHOICES, null=True, blank=True)
-    score = models.CharField(max_length=5, null=True, blank=True) # e.g. "15:10"
+    home_score = models.IntegerField(null=True, blank=True)
+    away_score = models.IntegerField(null=True, blank=True)
+    is_processed = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        if self.home_score is not None and self.away_score is not None:
+            if self.home_score > self.away_score:
+                self.result = 'HOME'
+            elif self.home_score < self.away_score:
+                self.result = 'AWAY'
+            else:
+                self.result = 'DRAW'
+        super().save(*args, **kwargs)
 
     def did_not_lose(self, team):
         if self.result is None:
@@ -73,10 +96,13 @@ class PlayerEntry(models.Model):
                                             related_name='eliminations')
 
 class Pick(models.Model):
-    player_entry = models.ForeignKey(PlayerEntry, on_delete=models.CASCADE)
+    player_entry = models.ForeignKey(PlayerEntry, on_delete=models.CASCADE,
+                                     related_name='picks')
     matchday = models.ForeignKey(Matchday, on_delete=models.CASCADE)
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
-    pick_submitted = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+    is_successful = models.BooleanField(null=True, blank=True)
 
     def clean(self):
         # Check if teams has already been picked twice
@@ -92,5 +118,9 @@ class Pick(models.Model):
         pick_deadline = self.matchday.start_date
         if timezone.now() >= pick_deadline:
             raise ValidationError(f"The deadline for this matchday has passed!")
+        
+        # Check if player is eliminated
+        if self.player_entry.eliminated:
+            raise ValidationError("You are eliminated!")
         
 
