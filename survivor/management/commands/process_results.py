@@ -13,7 +13,7 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             '--dry-run',
-            action='store_true'
+            action='store_true',
             help='Run wihthout making any changes'
         )
 
@@ -93,7 +93,7 @@ class Command(BaseCommand):
                     continue
 
                 # Check if team didn't lose
-                if team_match.team_did_not_lose(pick.team):
+                if team_match.did_not_lose(pick.team):
                     # Success - team won or drew
                     pick.is_successful = True
                     successful_picks.append(pick)
@@ -101,8 +101,7 @@ class Command(BaseCommand):
                     result_emoji = "✅"
                     if team_match.result == 'DRAW':
                         result_text = "drew"
-                    elif (pick.team == team_match.home_team and team_match.result == 'HOME_WIN') or \
-                         (pick.team == team_match.away_team and team_match.result == 'AWAY_WIN'):
+                    else:
                         result_text = "won"
 
                     self.stdout.write(
@@ -128,9 +127,14 @@ class Command(BaseCommand):
                     )
 
                 if not dry_run:
-                    pick.save()
+                    # Save pick without validation
+                    Pick.objects.filter(pk=pick.pk).update(is_successful=pick.is_successful)
                     if pick.is_successful == False:
-                        pick.player_entry.save()
+                        # Save player entry without validation
+                        PlayerEntry.objects.filter(pk=pick.player_entry.pk).update(
+                            is_eliminated=True,
+                            eliminated_matchday=matchday
+                        )
 
             # Mark matches as processed
             if not dry_run:

@@ -2,6 +2,7 @@
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from datetime import timedelta, datetime
 from survivor.models import Season, Matchday, Match, Team, GamePool, PlayerEntry, Pick
 import random
@@ -135,7 +136,7 @@ class Command(BaseCommand):
                 
             matchday.is_complete = True
             matchday.save()
-                            self.stdout.write(f'✓ Simulated results for matchday {matchday.number}')
+            self.stdout.write(f'✓ Simulated results for matchday {matchday.number}')
     
     def create_test_users(self, num_users):
         """Create test users for the pool"""
@@ -172,9 +173,9 @@ class Command(BaseCommand):
         
         # Create main pool
         pool_data = [
-            {'name': 'Main Pool 2024-25', 'entry_fee': 20.00},
-            {'name': 'Free Pool', 'entry_fee': 0.00},
-            {'name': 'High Stakes Pool', 'entry_fee': 100.00},
+            {'name': 'Main Pool 2024-25'},
+            {'name': 'Free Pool'},
+            {'name': 'High Stakes Pool'}
         ]
         
         # Use admin user or first test user as creator
@@ -189,7 +190,6 @@ class Command(BaseCommand):
                 season=season,
                 defaults={
                     'created_by': creator,
-                    'entry_fee': data['entry_fee'],
                     'is_active': True
                 }
             )

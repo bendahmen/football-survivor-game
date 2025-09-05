@@ -34,7 +34,7 @@ class Matchday(models.Model):
     season = models.ForeignKey(Season, on_delete=models.CASCADE,
                                related_name ='matchdays')
     number = models.PositiveIntegerField()
-    start_date = models.DateField()
+    start_date = models.DateTimeField()
     end_date = models.DateField()
     is_complete = models.BooleanField(default=False)
 
@@ -47,7 +47,7 @@ class Matchday(models.Model):
     
     @property
     def has_started(self):
-        return timezone.now().date() >= self.start_date
+        return timezone.now() >= self.start_date
     
     @property
     def is_current(self):
