@@ -47,13 +47,11 @@ class Matchday(models.Model):
     
     @property
     def has_started(self):
-        """Check if the matchday has started (past the deadline)"""
-        return timezone.now() >= self.start_date
+        return timezone.now().date() >= self.start_date
     
     @property
     def is_current(self):
-        """Check if we're currently in this matchday period"""
-        now = timezone.now()
+        now = timezone.now().date()
         return self.start_date <= now <= self.end_date
 
 class Match(models.Model):
