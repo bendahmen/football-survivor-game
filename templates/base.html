@@ -1,26 +1,30 @@
-<!-- templates/base.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Bundesliga Survivor{% endblock %}</title>
+    
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #f5f5f5;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
             color: #333;
         }
+        
         nav {
-            background: #2e7d32;
-            color: white;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             padding: 1rem;
         }
+        
         .nav-container {
             max-width: 1200px;
             margin: 0 auto;
@@ -28,38 +32,123 @@
             justify-content: space-between;
             align-items: center;
         }
+        
+        nav h1 {
+            color: #333;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
         nav a {
-            color: white;
+            color: #667eea;
             text-decoration: none;
-            margin-left: 1rem;
+            margin-left: 1.5rem;
+            font-weight: 500;
+            transition: color 0.3s;
         }
+        
         nav a:hover {
-            text-decoration: underline;
+            color: #764ba2;
         }
+        
         .container {
             max-width: 1200px;
             margin: 2rem auto;
             padding: 0 1rem;
         }
+        
         .messages {
             margin: 1rem 0;
         }
+        
         .message {
-            padding: 0.75rem;
-            border-radius: 4px;
+            padding: 1rem;
+            border-radius: 8px;
             margin-bottom: 0.5rem;
+            animation: slideIn 0.3s ease-out;
         }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateY(-10px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
         .message.success {
-            background: #c8e6c9;
-            color: #2e7d32;
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
         }
+        
         .message.error {
-            background: #ffcdd2;
-            color: #c62828;
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
         }
+        
         .message.warning {
             background: #fff3cd;
             color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn.btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn.btn-danger {
+            background: #dc3545;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
         }
     </style>
     {% block extra_css %}{% endblock %}
@@ -67,11 +156,17 @@
 <body>
     <nav>
         <div class="nav-container">
-            <h1>⚽ Bundesliga Survivor</h1>
-            <div>
+            <h1>
+                ⚽ Bundesliga Survivor
+            </h1>
+            <div class="user-info">
                 {% if user.is_authenticated %}
-                    <span>Welcome, {{ user.username }}!</span>
+                    <div class="user-avatar">{{ user.username.0|upper }}</div>
+                    <span>{{ user.username }}</span>
                     <a href="{% url 'logout' %}">Logout</a>
+                    {% if user.is_superuser %}
+                        <a href="/admin/">Admin</a>
+                    {% endif %}
                 {% else %}
                     <a href="{% url 'login' %}">Login</a>
                     <a href="{% url 'signup' %}">Sign Up</a>
