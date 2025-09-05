@@ -90,7 +90,7 @@ class GamePool(models.Model):
 class PlayerEntry(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     pool = models.ForeignKey(GamePool, on_delete=models.CASCADE)
-    eliminated = models.BooleanField(default=False)
+    is_eliminated = models.BooleanField(default=False)
     eliminated_matchday = models.ForeignKey(Matchday, null=True, blank=True, 
                                             on_delete=models.SET_NULL, 
                                             related_name='eliminations')
