@@ -134,7 +134,7 @@ LOGOUT_REDIRECT_URL = 'home'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Football Data API Configuration
+# Football Data API Configuration 
 FOOTBALL_DATA_API_KEY = 'eeb13d07c2504f478b01155faba79480'
 FOOTBALL_DATA_BASE_URL = 'https://api.football-data.org/v4'
 
