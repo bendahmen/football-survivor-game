@@ -164,7 +164,7 @@
             <h1 style="display: flex; align-items: center; gap: 0.5rem;">
                 {% load static %}
                 <img src="{% static 'images/logo.png' %}" alt="Kane you survive?" style="height: 40px; width: auto;">
-                Kane you survive?
+                <a href="{% url 'home' %}">Kane you survive?</a>
             </h1>
             <div class="user-info">
                 {% if user.is_authenticated %}
