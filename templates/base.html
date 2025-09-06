@@ -8,6 +8,9 @@
     <link rel="icon" type="image/png" href="{% static 'images/logo.png' %}">
 
     <style>
+        :root {
+            --background-color: #628145;
+        }
         * {
             margin: 0;
             padding: 0;
@@ -16,7 +19,7 @@
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #4ade80 0%, #16a34a 100%);
+            background: var(--background-color);
             min-height: 100vh;
             color: #333;
         }
@@ -44,7 +47,7 @@
         }
         
         nav a {
-            color: #16a34a;
+            color: var(--background-color);
             text-decoration: none;
             margin-left: 1.5rem;
             font-weight: 500;
@@ -52,7 +55,7 @@
         }
         
         nav a:hover {
-            color: #15803d;
+            color: var(--background-color);
         }
         
         .container {
@@ -85,7 +88,7 @@
         
         .message.success {
             background: #d4edda;
-            color: #155724;
+            color: var(--background-color);
             border: 1px solid #c3e6cb;
         }
         
@@ -112,7 +115,7 @@
         .btn {
             display: inline-block;
             padding: 0.75rem 1.5rem;
-            background: linear-gradient(135deg, #4ade80 0%, #16a34a 100%);
+            background: var(--background-color);
             color: white;
             text-decoration: none;
             border-radius: 8px;
@@ -145,7 +148,7 @@
             width: 32px;
             height: 32px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #4ade80 0%, #16a34a 100%);
+            background: var(--background-color);
             display: flex;
             align-items: center;
             justify-content: center;
