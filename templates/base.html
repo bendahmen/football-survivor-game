@@ -1,10 +1,12 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Bundesliga Survivor{% endblock %}</title>
-    
+    <title>{% block title %}Kane you survive?{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{% static 'images/logo.png' %}">
+
     <style>
         * {
             margin: 0;
@@ -156,14 +158,19 @@
 <body>
     <nav>
         <div class="nav-container">
-            <h1>
-                ⚽ Bundesliga Survivor
-            </h1>
+            <h1 style="display: flex; align-items: center; gap: 0.5rem;">
+                {% load static %}
+                <img src="{% static 'images/logo.png' %}" alt="Kane you survive?" style="height: 40px; width: auto;">
+                Kane you survive?
+            </h1>"
             <div class="user-info">
                 {% if user.is_authenticated %}
                     <div class="user-avatar">{{ user.username.0|upper }}</div>
                     <span>{{ user.username }}</span>
-                    <a href="{% url 'logout' %}">Logout</a>
+                    <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" style="background: none; border: none; color: #667eea; font-weight: 500; cursor: pointer; font-size: inherit; font-family: inherit;">Logout</button>
+                    </form>
                     {% if user.is_staff %}
                         <a href="{% url 'survivor:sync_dashboard' %}">Sync Data</a>
                     {% endif %}

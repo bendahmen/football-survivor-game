@@ -1,4 +1,4 @@
-# Football Survivor Game - Deployment & Maintenance Guide
+# Kane you survive? - Deployment & Maintenance Guide
 
 ## 🚀 Deployment on Render.com (Free Plan)
 

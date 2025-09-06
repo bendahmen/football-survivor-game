@@ -23,6 +23,8 @@ def home(request):
     }
     return render(request, 'home.html', context)
 
+
+
 def signup(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
