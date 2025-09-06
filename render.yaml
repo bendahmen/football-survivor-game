@@ -1,12 +1,6 @@
 # render.yaml
 # Configuration for deploying to Render.com
 
-databases:
-  - name: bundesliga-db
-    databaseName: bundesliga_survivor
-    user: bundesliga_user
-    plan: free
-
 services:
   - type: web
     name: bundesliga-survivor
@@ -15,27 +9,18 @@ services:
     buildCommand: "./build.sh"
     startCommand: "gunicorn football_survivor_game.wsgi:application"
     envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: bundesliga-db
-          property: connectionString
       - key: PYTHON_VERSION
-        value: 3.11.0
+        value: "3.12.5"  # FIX: Specify Python 3.12 to work with psycopg2
       - key: DJANGO_SETTINGS_MODULE
         value: football_survivor_game.settings_production
       - key: SECRET_KEY
         generateValue: true
       - key: FOOTBALL_DATA_API_KEY
         sync: false  # You must add this manually in Render dashboard!
+      # DATABASE_URL will be added manually after creating external database
 
-# NOTE: Cron jobs are not available on Render's free plan
-# To sync data, use the admin dashboard at /survivor/admin/sync/
-# You must be logged in as a staff member (admin user)
-# 
-# The admin dashboard allows you to:
-# 1. Sync all teams from the Bundesliga
-# 2. Sync fixtures for any season/matchday
-# 3. Process match results and eliminate players
-# 4. Quick sync everything with one click
-#
-# Initial deployment will automatically sync data if the database is empty
+# NOTE: Render's free plan doesn't auto-create databases from render.yaml
+# You must either:
+# 1. Create a PostgreSQL database manually in Render (expires in 90 days)
+# 2. Use external database like Supabase or Neon (free, no expiration)
+# Then add DATABASE_URL to environment variables above
