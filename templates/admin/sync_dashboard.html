@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Bundesliga Data Sync Dashboard</h1>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        <!-- Quick Actions -->
+        <div class="col-md-12 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3>Quick Actions</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'survivor:quick_sync_all' %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success btn-lg" onclick="return confirm('This will sync all teams, fixtures, and results. Continue?')">
+                            🔄 Sync Everything (2024/25 Season)
+                        </button>
+                    </form>
+                    <p class="mt-2 text-muted">Syncs teams, all fixtures for 2024/25 season, and processes results</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Teams Sync -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Sync Teams</h4>
+                </div>
+                <div class="card-body">
+                    <p>Fetch and update all Bundesliga teams from the API.</p>
+                    <form method="post" action="{% url 'survivor:sync_teams' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary">Sync Teams</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fixtures Sync -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Sync Fixtures</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'survivor:sync_fixtures' %}">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="season" class="form-label">Season Year (optional)</label>
+                            <input type="number" class="form-control" id="season" name="season" 
+                                   placeholder="e.g., 2024" min="2020" max="2030">
+                            <small class="text-muted">Leave empty for current season</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="matchday" class="form-label">Specific Matchday (optional)</label>
+                            <input type="number" class="form-control" id="matchday" name="matchday" 
+                                   placeholder="e.g., 15" min="1" max="34">
+                            <small class="text-muted">Leave empty to sync all matchdays</small>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="results_only" name="results_only" value="true">
+                            <label class="form-check-label" for="results_only">
+                                Update results only (don't create new fixtures)
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Sync Fixtures</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Process Results -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Process Results</h4>
+                </div>
+                <div class="card-body">
+                    <p>Process match results and eliminate players who picked losing teams.</p>
+                    <form method="post" action="{% url 'survivor:process_results' %}">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="process_matchday" class="form-label">Specific Matchday (optional)</label>
+                            <input type="number" class="form-control" id="process_matchday" name="matchday" 
+                                   placeholder="e.g., 15" min="1" max="34">
+                            <small class="text-muted">Leave empty to process all unprocessed matches</small>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-warning">Process Results</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Info -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4>API Information</h4>
+                </div>
+                <div class="card-body">
+                    <p><strong>API:</strong> football-data.org</p>
+                    <p><strong>Competition:</strong> Bundesliga (BL1)</p>
+                    <p><strong>Rate Limit:</strong> 10 requests/minute (free tier)</p>
+                    <p class="text-warning"><small>Note: Be mindful of rate limits when syncing large amounts of data.</small></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Output Console (optional - for AJAX responses) -->
+    <div class="row mt-4" id="output-section" style="display: none;">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Command Output</h4>
+                </div>
+                <div class="card-body">
+                    <pre id="command-output" class="bg-dark text-light p-3" style="max-height: 400px; overflow-y: auto;"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Optional: Add AJAX functionality for better UX
+document.addEventListener('DOMContentLoaded', function() {
+    const forms = document.querySelectorAll('form');
+    
+    forms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            // You can uncomment this to enable AJAX submissions
+            // e.preventDefault();
+            // submitFormAjax(form);
+        });
+    });
+});
+
+function submitFormAjax(form) {
+    const formData = new FormData(form);
+    
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert(data.message);
+            if (data.output) {
+                document.getElementById('output-section').style.display = 'block';
+                document.getElementById('command-output').textContent = data.output;
+            }
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Error: ' + error);
+    });
+}
+</script>
+{% endblock %}
