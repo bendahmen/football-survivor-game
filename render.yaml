@@ -1,0 +1,58 @@
+# render.yaml
+databases:
+  - name: bundesliga-db
+    databaseName: bundesliga_survivor
+    user: bundesliga_user
+    plan: free
+
+services:
+  - type: web
+    name: bundesliga-survivor
+    runtime: python
+    plan: free
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn football_survivor_game.wsgi:application"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: bundesliga-db
+          property: connectionString
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: DJANGO_SETTINGS_MODULE
+        value: football_survivor_game.settings_production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FOOTBALL_DATA_API_KEY
+        sync: false  # You'll add this manually in Render dashboard
+
+# Cron jobs for automatic syncing
+  - type: cron
+    name: bundesliga-sync-hourly
+    runtime: python
+    schedule: "0 * * * *"  # Every hour
+    buildCommand: "./build.sh"
+    startCommand: "python manage.py update_bundesliga"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: bundesliga-db
+          property: connectionString
+      - key: DJANGO_SETTINGS_MODULE
+        value: football_survivor_game.settings_production
+      - fromGroup: bundesliga-survivor-env
+
+  - type: cron
+    name: bundesliga-sync-daily
+    runtime: python
+    schedule: "0 6 * * *"  # Daily at 6 AM
+    buildCommand: "./build.sh"
+    startCommand: "python manage.py update_bundesliga --full"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: bundesliga-db
+          property: connectionString
+      - key: DJANGO_SETTINGS_MODULE
+        value: football_survivor_game.settings_production
+      - fromGroup: bundesliga-survivor-env
