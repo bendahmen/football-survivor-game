@@ -4,6 +4,7 @@
 from .settings import *
 import dj_database_url
 import os
+import sys
 
 # Security settings for production
 DEBUG = False
@@ -16,16 +17,24 @@ ALLOWED_HOSTS = [
 # Add your render app URL when you know it
 # ALLOWED_HOSTS.append('your-app-name.onrender.com')
 
-# Database - Render provides DATABASE_URL
-# DATABASES = {
-#     'default': dj_database_url.config(
-#         conn_max_age=600,
-#         conn_health_checks=True,
-#     )
-# }
-DATABASES = {
-    'default': dj_database_url.parse('postgresql://postgres:F4vyM6wdCrILiDg8@db.qoeheccljivukhgajelq.supabase.co:5432/postgres')
-}
+if 'collectstatic' in sys.argv:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': 'temp.db'
+        }
+    }
+else:
+    # Database - Render provides DATABASE_URL
+    # DATABASES = {
+    #     'default': dj_database_url.config(
+    #         conn_max_age=600,
+    #         conn_health_checks=True,
+    #     )
+    # }
+    DATABASES = {
+        'default': dj_database_url.parse('postgresql://postgres:F4vyM6wdCrILiDg8@db.qoeheccljivukhgajelq.supabase.co:5432/postgres')
+    }
 
 # Static files with WhiteNoise
 MIDDLEWARE = [
