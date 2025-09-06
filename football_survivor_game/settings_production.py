@@ -17,11 +17,14 @@ ALLOWED_HOSTS = [
 # ALLOWED_HOSTS.append('your-app-name.onrender.com')
 
 # Database - Render provides DATABASE_URL
+# DATABASES = {
+#     'default': dj_database_url.config(
+#         conn_max_age=600,
+#         conn_health_checks=True,
+#     )
+# }
 DATABASES = {
-    'default': dj_database_url.config(
-        conn_max_age=600,
-        conn_health_checks=True,
-    )
+    'default': dj_database_url.parse('postgresql://postgres:F4vyM6wdCrILiDg8@db.qoeheccljivukhgajelq.supabase.co:5432/postgres')
 }
 
 # Static files with WhiteNoise
