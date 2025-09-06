@@ -33,7 +33,8 @@ else:
     #     )
     # }
     DATABASES = {
-        'default': dj_database_url.parse('postgresql://postgres:F4vyM6wdCrILiDg8@db.qoeheccljivukhgajelq.supabase.co:5432/postgres')
+        #'default': dj_database_url.parse('postgresql://postgres:F4vyM6wdCrILiDg8@db.qoeheccljivukhgajelq.supabase.co:5432/postgres')
+        'default': dj_database_url.parse('postgresql://postgres.qoeheccljivukhgajelq:F4vyM6wdCrILiDg8@aws-1-eu-central-1.pooler.supabase.com:6543/postgres')
     }
 
 # Static files with WhiteNoise
