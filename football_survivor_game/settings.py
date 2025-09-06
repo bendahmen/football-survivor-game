@@ -133,3 +133,14 @@ LOGOUT_REDIRECT_URL = 'home'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Football Data API Configuration
+FOOTBALL_DATA_API_KEY = 'eeb13d07c2504f478b01155faba79480'
+FOOTBALL_DATA_BASE_URL = 'https://api.football-data.org/v4'
+
+# Bundesliga competition code
+BUNDESLIGA_COMPETITION_CODE = 'BL1'
+
+# API Rate Limiting (free tier: 10 requests per minute)
+API_RATE_LIMIT = 10
+API_RATE_PERIOD = 60  # in seconds
