@@ -70,6 +70,7 @@ class Match(models.Model):
     home_score = models.IntegerField(null=True, blank=True)
     away_score = models.IntegerField(null=True, blank=True)
     is_processed = models.BooleanField(default=False)
+    modified_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
         # Auto-calculate result from scores
