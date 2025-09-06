@@ -19,8 +19,8 @@ class Command(BaseCommand):
         parser.add_argument(
             '--season',
             type=int,
-            default=2024,
-            help='Season year to sync (default: 2024)'
+            default=2025,
+            help='Season year to sync (default: 2025)'
         )
     
     def handle(self, *args, **options):

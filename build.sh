@@ -43,8 +43,8 @@ if Team.objects.count() == 0:
             print('Teams synced from API')
             
             # Sync fixtures for current season
-            call_command('sync_fixtures', season=2024)
-            print('Fixtures synced for 2024/25 season')
+            call_command('sync_fixtures', season=2025)
+            print('Fixtures synced for 2025/26 season')
             
             # Process any results
             call_command('process_results')

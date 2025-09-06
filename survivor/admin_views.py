@@ -139,9 +139,9 @@ def quick_sync_all(request):
             call_command('sync_teams', stdout=out)
             output.append(f"=== TEAMS SYNC ===\n{out.getvalue()}")
             
-            # 2. Sync fixtures for current season (2024)
+            # 2. Sync fixtures for current season (2025)
             out = StringIO()
-            call_command('sync_fixtures', season=2024, stdout=out)
+            call_command('sync_fixtures', season=2025, stdout=out)
             output.append(f"\n=== FIXTURES SYNC ===\n{out.getvalue()}")
             
             # 3. Process results
