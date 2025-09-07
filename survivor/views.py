@@ -217,6 +217,11 @@ def matchday_fixtures(request, matchday_id):
 def join_pool(request, pool_id):
     pool = get_object_or_404(GamePool, id=pool_id)
 
+    # Check if pool is open
+    if not pool.is_open:
+        messages.error(request, 'This deadline to join this pool has passed.')
+        return redirect('survivor:pool_detail', pool_id=pool.id)
+
     # Check if user already in pool
     if PlayerEntry.objects.filter(user=request.user, pool=pool).exists():
         messages.warning(request, 'You are already in this pool.')

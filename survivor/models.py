@@ -111,6 +111,8 @@ class GamePool(models.Model):
     
     @property
     def is_open(self):
+        if self.deadline is None:
+            return self.is_active
         return self.is_active and timezone.now() < self.deadline
     
     @property
@@ -157,7 +159,7 @@ class PlayerEntry(models.Model):
 
     def clean(self):
         # Ensure that a player can only join a GamePool if it is open
-        if not self.pool.is_open:
+        if self.pool.deadline and not self.pool.is_open:
             raise ValidationError('Cannot join pool: The deadline has passed.')
 
     def save(self, *args, **kwargs):
