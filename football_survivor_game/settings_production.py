@@ -15,7 +15,7 @@ ALLOWED_HOSTS = [
 ]
 
 # Add your render app URL when you know it
-# ALLOWED_HOSTS.append('your-app-name.onrender.com')
+ALLOWED_HOSTS.append('kane-izy1.onrender.com')
 
 if 'collectstatic' in sys.argv:
     DATABASES = {
@@ -32,9 +32,6 @@ else:
             conn_health_checks=True,
         )
     }
-    # DATABASES = {
-    #     'default': dj_database_url.parse('postgresql://postgres.qoeheccljivukhgajelq:F4vyM6wdCrILiDg8@aws-1-eu-central-1.pooler.supabase.com:6543/postgres')
-    # }
 
 # Static files with WhiteNoise
 MIDDLEWARE = [

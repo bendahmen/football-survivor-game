@@ -104,9 +104,14 @@ class GamePool(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_pools')
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
+    deadline = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.name} ({self.season.year})"
+    
+    @property
+    def is_open(self):
+        return self.is_active and timezone.now() < self.deadline
     
     @property
     def active_players_count(self):
@@ -149,6 +154,16 @@ class PlayerEntry(models.Model):
             if self.can_pick_team(team):
                 available.append(team)
         return available
+
+    def clean(self):
+        # Ensure that a player can only join a GamePool if it is open
+        if not self.pool.is_open:
+            raise ValidationError('Cannot join pool: The deadline has passed.')
+
+    def save(self, *args, **kwargs):
+        # Run validation before saving
+        self.full_clean()
+        super().save(*args, **kwargs)
 
 class Pick(models.Model):
     player_entry = models.ForeignKey(PlayerEntry, on_delete=models.CASCADE,
